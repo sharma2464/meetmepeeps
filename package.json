@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@100mslive/react-sdk": "^0.1.1",
+    "@ant-design/icons": "^4.7.0",
     "antd": "^4.21.0",
+    "dayjs": "^1.11.3",
     "firebase": "^9.8.3",
     "next": "12.1.6",
     "react": "18.1.0",

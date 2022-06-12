@@ -1,14 +1,31 @@
-import { Form, Input } from "antd";
+import { Button, Form, Input, Row, Select, Space } from "antd";
+import dayjs from "dayjs";
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
+import { Fragment, useEffect, useState } from "react";
 import { useAuth } from "../config/AuthContext";
 import styles from "../styles/Home.module.css";
+
+var weekOfYear = require("dayjs/plugin/weekOfYear");
+var weekYear = require("dayjs/plugin/weekYear");
+dayjs.extend(weekYear);
+dayjs.extend(weekOfYear);
 
 export default function Home() {
   const [slotsForm] = Form.useForm();
   const router = useRouter();
   const { authenticated, user, login, logout } = useAuth();
+  const thisWeek = dayjs().week();
+  const thisDate = dayjs().format();
+  const [currentWeek, setCurrentWeek] = useState(thisWeek);
+
+  useEffect(() => {
+    dayjs().week(currentWeek);
+    console.log("week", currentWeek);
+    console.log("updated", dayjs().week());
+  }, [currentWeek]);
 
   const handleOnSlotsFormFinish = (values) => {
     console.log("slotsForm values", values);
@@ -24,7 +41,7 @@ export default function Home() {
     return <>Loading...</>;
   }
 
-  if (authenticated && user) {
+  if (authenticated) {
     return (
       <div className={styles.container}>
         <Head>
@@ -35,35 +52,90 @@ export default function Home() {
 
         <main className={styles.main}>
           <nav>
-            {authenticated && user && (
+            {authenticated && user ? (
               <>
-                <button onClick={logout}>
+                <Button onClick={logout}>
                   {user?.displayName}&nbsp; Logout
-                </button>
+                </Button>
               </>
+            ) : (
+              <Link href="/signin">Signin</Link>
             )}
           </nav>
+
           <h1 className={styles.title}>
-            Welcome to <a href="https://nextjs.org">Next.js!</a>
+            Welcome to <a href="https://www.meetmepeeps.com">MeetMePeeps!</a>
           </h1>
 
           <div>
-            <Form name="slots" onFinish={handleOnSlotsFormFinish} size="small">
-              {[
-                "Sunday",
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-              ].map((day, idx) => {
-                <div key={idx}>
-                  <Form.Item name={day.toLowerCase() + "_start"}>
-                    <Input type="time" />
-                  </Form.Item>
-                </div>;
-              })}
+            {currentWeek && (
+              <>
+                <Button
+                  onClick={() => {
+                    setCurrentWeek(currentWeek - 1);
+                  }}
+                >
+                  {"<"}
+                </Button>
+                Current Week: {currentWeek}
+                <Button
+                  onClick={() => {
+                    setCurrentWeek(currentWeek + 1);
+                  }}
+                >
+                  {">"}
+                </Button>
+                <br />
+                {dayjs().format("DD-MM-YYYY | hh:mm:A")}
+                {thisDate}
+              </>
+            )}
+            <Form
+              form={slotsForm}
+              name="slots"
+              onFinish={handleOnSlotsFormFinish}
+              size="small"
+              layout="horizontal"
+            >
+              <Form.Item name={"week_" + currentWeek}>
+                {[
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                ].map((day, idx) => {
+                  return (
+                    <Fragment key={idx}>
+                      <Row>
+                        <Space>
+                          <Form.Item name={day.toLowerCase() + "_start"}>
+                            <Input type="time" />
+                          </Form.Item>
+                          <Form.Item name={day.toLowerCase() + "_end"}>
+                            <Input type="time" />
+                          </Form.Item>
+                          <Form.Item name={day.toLowerCase() + "_duration"}>
+                            <Select
+                              options={[
+                                { label: "15 Miutes", value: 15 },
+                                { label: "30 Miutes", value: 30 },
+                              ]}
+                              style={{ width: "100px" }}
+                            />
+                          </Form.Item>
+                        </Space>
+                      </Row>
+                    </Fragment>
+                  );
+                })}
+              </Form.Item>
+
+              <Button type="primary" htmlType="submit" block>
+                Update
+              </Button>
             </Form>
 
             <form
